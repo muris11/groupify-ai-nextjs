@@ -21,7 +21,7 @@ export function GuideDialog({ open, onOpenChange }: GuideDialogProps) {
           <DialogTitle className="flex items-center gap-2 text-lg sm:text-2xl">
             <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             <span className="text-sm sm:text-base">
-              User Guide - Groupify AI
+              User Guide - Groupora AI
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -32,7 +32,7 @@ export function GuideDialog({ open, onOpenChange }: GuideDialogProps) {
                 🎯 Tentang Aplikasi
               </h3>
               <p className="text-muted-foreground">
-                <strong>Groupify AI</strong> is a web application that helps you
+                <strong>Groupora AI</strong> is a web application that helps you
                 create random groups automatically with AI assistance. Perfect
                 for teachers, trainers, event organizers, or anyone who needs to
                 divide participants into fair and efficient groups.

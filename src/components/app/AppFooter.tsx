@@ -12,7 +12,7 @@ export function AppFooter() {
             </span>
           </p>
           <p className="text-xs text-muted-foreground/70">
-            © 2025 Groupify AI. All rights reserved.
+            © 2025 Groupora AI. All rights reserved.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-4">
             <div className="flex flex-col sm:flex-row items-center gap-1 text-xs text-muted-foreground">

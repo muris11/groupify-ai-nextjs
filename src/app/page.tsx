@@ -745,7 +745,7 @@ export default function GroupSpinner() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
               <HelpCircle className="w-6 h-6 text-primary" />
-              User Guide - Groupify AI
+              User Guide - Groupora AI
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 text-sm leading-relaxed">
@@ -755,7 +755,7 @@ export default function GroupSpinner() {
                   🎯 Tentang Aplikasi
                 </h3>
                 <p className="text-muted-foreground">
-                  <strong>Groupify AI</strong> is a web application that helps
+                  <strong>Groupora AI</strong> is a web application that helps
                   you create random groups automatically with AI assistance.
                   Perfect for teachers, trainers, event organizers, or anyone
                   who needs to divide participants into fair and efficient

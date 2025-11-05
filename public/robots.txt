@@ -1,5 +1,5 @@
-# Robots.txt for Groupify AI - Smart Group Generator App
-# https://groupify-ai.vercel.app
+# Robots.txt for Groupora AI - Smart Group Generator App
+# https://groupora-ai.vercel.app
 
 # Allow all web crawlers to access the main content
 User-agent: *

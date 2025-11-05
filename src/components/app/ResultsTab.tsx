@@ -83,7 +83,7 @@ export function ResultsTab({
         <body>
           <div style="max-width: 100%; margin: 0 auto; font-family: Arial, sans-serif; color: #000000; background: white; padding: 20px;">
             <h1 style="color: #2563eb; text-align: center; margin-bottom: 30px; font-size: 28px; font-weight: bold;">
-              Groupify AI - Hasil Kelompok
+              Groupora AI - Hasil Kelompok
             </h1>
             <p style="text-align: center; color: #666666; margin-bottom: 40px; font-size: 14px;">
               Dibuat pada ${new Date().toLocaleDateString(
@@ -144,7 +144,7 @@ export function ResultsTab({
 
             <div style="margin-top: 40px; padding: 20px; background: #f3f4f6; border-radius: 8px; text-align: center;">
               <p style="margin: 0; color: #666666; font-size: 12px;">
-                Dibuat dengan Groupify AI - Powered by Google Gemini AI
+                Dibuat dengan Groupora AI - Powered by Google Gemini AI
               </p>
             </div>
           </div>
@@ -178,7 +178,7 @@ export function ResultsTab({
 
       pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
       pdf.save(
-        `groupify-ai-hasil-kelompok-${
+        `groupora-ai-hasil-kelompok-${
           new Date().toISOString().split("T")[0]
         }.pdf`
       );

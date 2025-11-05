@@ -22,7 +22,7 @@ export function AppHeader({ onShowGuide }: AppHeaderProps) {
           />
         </div>
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-scaleIn">
-          Groupify AI
+          Groupora AI
         </h1>
         <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary animate-glow shrink-0" />
       </div>

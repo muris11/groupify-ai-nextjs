@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Groupify AI - Smart Group Generator",
+  title: "Groupora AI - Smart Group Generator",
   description:
     "Create random groups instantly with AI-powered features. Perfect for classes, teams, and events.",
   keywords: [
-    "groupify ai",
+    "groupora ai",
     "group generator",
     "random groups",
     "team generator",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     "team formation",
     "ai group maker",
   ],
-  authors: [{ name: "Groupify AI Team" }],
+  authors: [{ name: "Groupora AI Team" }],
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -41,13 +41,13 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: "Groupify AI - Smart Group Generator",
+    title: "Groupora AI - Smart Group Generator",
     description: "Create random groups instantly with AI-powered features",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Groupify AI - Smart Group Generator",
+    title: "Groupora AI - Smart Group Generator",
     description: "Create random groups instantly with AI-powered features",
   },
 };
