@@ -1,0 +1,119 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(request: NextRequest) {
+  try {
+    const { groups, context } = await request.json();
+
+    if (!groups || !Array.isArray(groups) || groups.length === 0) {
+      return NextResponse.json(
+        { error: "Kelompok tidak valid" },
+        { status: 400 }
+      );
+    }
+
+    let prompt = `Saya perlu membuat ${groups.length} pertanyaan pemecah es (icebreaker) untuk ${groups.length} kelompok. `;
+
+    if (context) {
+      prompt += `Konteksnya adalah: ${context}. `;
+    }
+
+    prompt += `Buatkan ${groups.length} pertanyaan pemecah es yang unik dan cocok untuk team building. 
+    Buat pertanyaan yang menarik dan menyenangkan, cocok untuk saling mengenal.
+    Gunakan Bahasa Indonesia yang natural dan sesuai budaya Indonesia.
+    
+    Kembalikan response dalam format JSON seperti ini (HANYA JSON, tanpa markdown atau text tambahan):
+    {
+      "icebreakers": [
+        {
+          "groupIndex": 0,
+          "question": "Ceritakan satu hal menarik tentang dirimu yang jarang orang tahu?"
+        },
+        {
+          "groupIndex": 1,
+          "question": "Jika kamu bisa punya satu superkekuatan, apa itu dan mengapa?"
+        }
+      ]
+    }`;
+
+    console.log("Generating icebreakers with Gemini 2.0 Flash...");
+
+    // Use REST API directly
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+
+    const apiResponse = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!apiResponse.ok) {
+      const errorData = await apiResponse.json();
+      console.error("Gemini API error:", errorData);
+      throw new Error(`API Error: ${apiResponse.status}`);
+    }
+
+    const data = await apiResponse.json();
+    const messageContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    console.log("Gemini response received:", messageContent?.substring(0, 100));
+
+    if (!messageContent) {
+      return NextResponse.json(
+        { error: "Gagal membuat pertanyaan pemecah es" },
+        { status: 500 }
+      );
+    }
+
+    try {
+      // Clean up the response to extract JSON
+      let jsonText = messageContent.trim();
+      // Remove markdown code blocks if present
+      jsonText = jsonText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
+      jsonText = jsonText.replace(/```\n?$/g, "").trim();
+
+      console.log("Attempting to parse JSON:", jsonText.substring(0, 200));
+      const parsedResult = JSON.parse(jsonText);
+      console.log("Successfully parsed icebreakers");
+      return NextResponse.json(parsedResult);
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", parseError);
+      // Fallback icebreakers if parsing fails
+      const fallbackIcebreakers = [
+        "Ceritakan satu hal menarik tentang dirimu yang jarang orang tahu?",
+        "Jika kamu bisa punya satu superkekuatan, apa itu dan mengapa?",
+        "Apa hal terbaik yang terjadi padamu minggu ini?",
+        "Jika bisa traveling ke mana saja, kamu akan ke mana?",
+        "Skill apa yang ingin kamu pelajari dan mengapa?",
+        "Apa cara favoritmu untuk rileks setelah hari yang panjang?",
+        "Jika bisa bertemu tokoh sejarah mana pun, siapa yang kamu pilih?",
+        "Tempat paling menarik yang pernah kamu kunjungi?",
+      ];
+
+      const icebreakers = groups.map((_: any, index: number) => ({
+        groupIndex: index,
+        question: fallbackIcebreakers[index % fallbackIcebreakers.length],
+      }));
+
+      console.log("Using fallback icebreakers");
+      return NextResponse.json({ icebreakers });
+    }
+  } catch (error) {
+    console.error("Error generating icebreakers:", error);
+    return NextResponse.json(
+      { error: "Terjadi kesalahan server" },
+      { status: 500 }
+    );
+  }
+}
