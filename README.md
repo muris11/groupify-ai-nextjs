@@ -19,7 +19,7 @@
 - **UI Library**: React 19
 - **Styling**: Tailwind CSS 4
 - **UI Components**: Shadcn/ui + Radix UI
-- **AI**: Google Gemini 2.0 Flash
+- **AI**: Google Gemini 2.0 Flash / OpenAI GPT (configurable)
 - **Database**: Prisma ORM + PostgreSQL (Supabase)
 - **Real-time**: Socket.IO untuk collaborative features
 - **PDF Generation**: html2pdf.js
@@ -83,11 +83,13 @@ NEXTAUTH_URL="http://localhost:3000"
 ```
 
 **Catatan**: Untuk development lokal, Anda bisa menggunakan SQLite dengan mengubah `DATABASE_URL` ke:
+
 ```
 DATABASE_URL="file:./dev.db"
 ```
 
 Dan update `prisma/schema.prisma` datasource ke:
+
 ```
 datasource db {
   provider = "sqlite"
@@ -249,25 +251,26 @@ Aplikasi ini menyediakan beberapa API endpoints untuk integrasi AI dan fungsiona
 
 ```javascript
 // Generate nama kelompok
-const response = await fetch('/api/generate-team-names', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ theme: 'tech', count: 5 })
+const response = await fetch("/api/generate-team-names", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ theme: "tech", count: 5 }),
 });
 
 // Smart balance groups
-const balanceResponse = await fetch('/api/smart-balance', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const balanceResponse = await fetch("/api/smart-balance", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    members: ['Alice', 'Bob', 'Charlie'],
-    criteria: ['skill', 'gender']
-  })
+    members: ["Alice", "Bob", "Charlie"],
+    criteria: ["skill", "gender"],
+  }),
 });
 ```
 
 ## 📝 Cara Penggunaan
-```
+
+````
 
 ## 🔧 Available Scripts
 
@@ -304,7 +307,9 @@ const balanceResponse = await fetch('/api/smart-balance', {
 
 | Variable | Description | Example |
 |----------|-------------|---------|
+| `AI_PROVIDER` | AI provider to use: "gemini" or "openai" | `gemini` |
 | `GOOGLE_GEMINI_API_KEY` | API key untuk Google Gemini AI | `AIzaSy...` |
+| `OPENAI_API_KEY` | API key untuk OpenAI (opsional) | `sk-...` |
 
 ### Optional Variables
 
@@ -370,9 +375,63 @@ const balanceResponse = await fetch('/api/smart-balance', {
     criteria: ['skill', 'gender']
   })
 });
+````
+
+## 🧪 Testing AI Connection
+
+### Test Gemini AI
+
+```bash
+# Test koneksi Gemini (default)
+curl http://localhost:3000/api/test-ai
+
+# Atau dengan browser: http://localhost:3000/api/test-ai
 ```
 
-## 🛠️ Troubleshooting
+### Test OpenAI
+
+1. **Setup environment variables** untuk OpenAI:
+
+```env
+AI_PROVIDER=openai
+OPENAI_API_KEY=your-openai-api-key-here
+```
+
+2. **Test koneksi OpenAI**:
+
+```bash
+curl "http://localhost:3000/api/test-ai?provider=openai"
+```
+
+### Test dengan Custom Prompt
+
+```bash
+curl -X POST http://localhost:3000/api/test-ai \
+  -H "Content-Type: application/json" \
+  -d '{"provider": "openai", "prompt": "Say hello in Indonesian"}'
+```
+
+### Expected Response
+
+**Success**:
+
+```json
+{
+  "success": true,
+  "message": "✅ OPENAI API connected successfully",
+  "provider": "openai"
+}
+```
+
+**Error**:
+
+```json
+{
+  "success": false,
+  "message": "❌ OPENAI API connection failed: API key missing",
+  "provider": "openai"
+}
+```
 
 ### Build Errors
 
@@ -392,7 +451,8 @@ color: #3b82f6;
 
 #### TypeScript Errors
 
-**Solusi**: 
+**Solusi**:
+
 ```bash
 # Check TypeScript errors
 npx tsc --noEmit
@@ -408,6 +468,7 @@ npm run lint
 **Penyebab**: API key invalid, quota habis, atau koneksi bermasalah
 
 **Solusi**:
+
 - Pastikan `GOOGLE_GEMINI_API_KEY` valid dan aktif
 - Check quota API di [Google AI Studio](https://makersuite.google.com/app/apikey)
 - Pastikan koneksi internet stabil
@@ -416,6 +477,7 @@ npm run lint
 #### "Prisma Client not generated"
 
 **Solusi**:
+
 ```bash
 npm run db:generate
 ```
@@ -425,6 +487,7 @@ npm run db:generate
 **Penyebab**: Custom server tidak berjalan atau port conflict
 
 **Solusi**:
+
 - Gunakan `npm run dev:custom` untuk development
 - Pastikan port 3000 tidak digunakan aplikasi lain
 - Check firewall settings untuk WebSocket connections
@@ -434,6 +497,7 @@ npm run db:generate
 #### "Database connection error"
 
 **Solusi**:
+
 - Verify `DATABASE_URL` di `.env.local`
 - Pastikan Supabase project aktif
 - Untuk local PostgreSQL, pastikan service running
@@ -442,6 +506,7 @@ npm run db:generate
 #### "Migration failed"
 
 **Solusi**:
+
 ```bash
 # Reset database
 npm run db:reset
@@ -461,6 +526,7 @@ npm run db:push
 #### Port already in use
 
 **Solusi**:
+
 ```bash
 # Kill process on port 3000
 npx kill-port 3000
@@ -484,6 +550,7 @@ PORT=3001 npm run dev
 #### Vercel Build Failed
 
 **Solusi**:
+
 - Pastikan semua dependencies ter-install
 - Check build logs di Vercel dashboard
 - Pastikan environment variables diset dengan benar
@@ -572,17 +639,20 @@ npx prettier --write .
 ## 📈 Roadmap
 
 ### Version 1.1.0
+
 - [ ] User authentication dengan NextAuth.js
 - [ ] Save groups ke database
 - [ ] Collaborative group editing
 - [ ] Advanced AI features
 
 ### Version 1.2.0
+
 - [ ] Mobile app dengan React Native
 - [ ] Integration dengan Google Classroom
 - [ ] Advanced analytics dashboard
 
 ### Future Features
+
 - [ ] Multi-language support
 - [ ] Plugin system untuk custom AI models
 - [ ] Integration dengan LMS platforms
@@ -590,6 +660,7 @@ npx prettier --write .
 ## 📋 Changelog
 
 ### Version 1.0.0 (Current)
+
 - ✅ Pembagian kelompok otomatis dan manual
 - ✅ Smart balance dengan AI
 - ✅ Generate nama kelompok kreatif
@@ -601,6 +672,7 @@ npx prettier --write .
 - ✅ Custom server setup
 
 ### Version 0.9.0 (Beta)
+
 - ✅ Basic group creation
 - ✅ PDF export functionality
 - ✅ Google Gemini AI integration

@@ -1,3 +1,4 @@
+import { callAI, getAIProvider } from "@/lib/ai";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -43,38 +44,12 @@ Kembalikan HANYA array JSON berisi ${count} nama tim, seperti:
 
 PENTING: Kembalikan HANYA JSON array, tanpa markdown, penjelasan, atau teks tambahan apapun.`;
 
-    console.log("Generating team names with Gemini 2.0 Flash...");
+    console.log(
+      `Generating team names with ${getAIProvider().toUpperCase()}...`
+    );
 
-    // Use REST API directly with gemini-2.0-flash-exp
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
-
-    const apiResponse = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-      }),
-    });
-    if (!apiResponse.ok) {
-      const errorData = await apiResponse.json();
-      console.error("Gemini API error:", errorData);
-      throw new Error(`API Error: ${apiResponse.status}`);
-    }
-
-    const data = await apiResponse.json();
-    const messageContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    console.log("Gemini response:", messageContent?.substring(0, 100));
+    // Use unified AI function
+    const messageContent = await callAI(prompt);
 
     if (!messageContent) {
       return NextResponse.json(

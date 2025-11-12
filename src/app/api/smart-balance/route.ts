@@ -1,3 +1,4 @@
+import { callAI, getAIProvider } from "@/lib/ai";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -42,38 +43,10 @@ export async function POST(request: NextRequest) {
     }
     Kembalikan HANYA JSON yang valid, tanpa markdown atau teks tambahan.`;
 
-    console.log("Balancing groups with Gemini 2.0 Flash...");
+    console.log(`Balancing groups with ${getAIProvider().toUpperCase()}...`);
 
-    // Use REST API directly
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
-
-    const apiResponse = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (!apiResponse.ok) {
-      const errorData = await apiResponse.json();
-      console.error("Gemini API error:", errorData);
-      throw new Error(`API Error: ${apiResponse.status}`);
-    }
-
-    const data = await apiResponse.json();
-    const messageContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    // Use unified AI function
+    const messageContent = await callAI(prompt);
 
     if (!messageContent) {
       return NextResponse.json(
