@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { HelpCircle, Moon, Sun, Sparkles } from "lucide-react";
+import { HelpCircle, Moon, Sparkles, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 

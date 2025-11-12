@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { AIToolsTab } from "@/components/app/AIToolsTab";
+import { AppFooter } from "@/components/app/AppFooter";
+import { AppHeader } from "@/components/app/AppHeader";
+import { CreateGroupsTab } from "@/components/app/CreateGroupsTab";
+import { ResultsTab } from "@/components/app/ResultsTab";
+import { Constraint, ConstraintManager } from "@/components/constraint-manager";
+import { InteractiveGroupEditor } from "@/components/interactive-group-editor";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -13,32 +16,9 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Brain, Edit3, HelpCircle, RefreshCw, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
-import { ConstraintManager, Constraint } from "@/components/constraint-manager";
-import { InteractiveGroupEditor } from "@/components/interactive-group-editor";
-import { AppHeader } from "@/components/app/AppHeader";
-import { GuideDialog } from "@/components/app/GuideDialog";
-import { CreateGroupsTab } from "@/components/app/CreateGroupsTab";
-import { ResultsTab } from "@/components/app/ResultsTab";
-import { AIToolsTab } from "@/components/app/AIToolsTab";
-import { AppFooter } from "@/components/app/AppFooter";
-import {
-  Shuffle,
-  RefreshCw,
-  Crown,
-  Star,
-  Copy,
-  FileText,
-  Download,
-  Edit3,
-  Brain,
-  MessageCircle,
-  Lightbulb,
-  HelpCircle,
-  Moon,
-  Sun,
-  Settings,
-} from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface Group {
   id: string;
@@ -464,13 +444,40 @@ export default function GroupSpinner() {
           description: `Berhasil membuat ${data.teamNames.length} nama tim kreatif dengan tema "${aiTheme}".`,
         });
       } else {
-        throw new Error(data.error || "Gagal membuat nama tim");
+        // Handle specific error types
+        let errorTitle = "Pembuatan AI Gagal";
+        let errorDescription =
+          "Tidak dapat membuat nama tim. Silakan coba lagi.";
+
+        if (data.error) {
+          if (data.error.includes("Batas penggunaan AI tercapai")) {
+            errorTitle = "Batas Penggunaan AI";
+            errorDescription =
+              "AI sedang sibuk. Silakan tunggu 1-2 menit sebelum mencoba lagi.";
+          } else if (data.error.includes("Konfigurasi AI tidak valid")) {
+            errorTitle = "Konfigurasi AI";
+            errorDescription =
+              "Ada masalah dengan pengaturan AI. Hubungi administrator.";
+          } else if (data.error.includes("Masalah koneksi jaringan")) {
+            errorTitle = "Masalah Koneksi";
+            errorDescription = "Periksa koneksi internet Anda dan coba lagi.";
+          } else {
+            errorDescription = data.error;
+          }
+        }
+
+        toast({
+          title: errorTitle,
+          description: errorDescription,
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error generating AI team names:", error);
       toast({
-        title: "Pembuatan AI Gagal",
-        description: "Tidak dapat membuat nama tim. Silakan coba lagi.",
+        title: "Kesalahan Jaringan",
+        description:
+          "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.",
         variant: "destructive",
       });
     } finally {

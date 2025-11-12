@@ -53,7 +53,7 @@ PENTING: Kembalikan HANYA JSON array, tanpa markdown, penjelasan, atau teks tamb
 
     if (!messageContent) {
       return NextResponse.json(
-        { error: "Gagal membuat nama tim" },
+        { error: "AI tidak dapat menghasilkan respons. Silakan coba lagi." },
         { status: 500 }
       );
     }
@@ -88,9 +88,36 @@ PENTING: Kembalikan HANYA JSON array, tanpa markdown, penjelasan, atau teks tamb
     }
   } catch (error) {
     console.error("Error generating team names:", error);
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server" },
-      { status: 500 }
-    );
+
+    // Provide more specific error messages
+    let errorMessage = "Terjadi kesalahan server";
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      if (
+        error.message.includes("rate limit") ||
+        error.message.includes("429")
+      ) {
+        errorMessage =
+          "Batas penggunaan AI tercapai. Silakan tunggu beberapa saat sebelum mencoba lagi.";
+        statusCode = 429;
+      } else if (
+        error.message.includes("API key") ||
+        error.message.includes("authentication")
+      ) {
+        errorMessage =
+          "Konfigurasi AI tidak valid. Periksa pengaturan API key.";
+        statusCode = 500;
+      } else if (
+        error.message.includes("network") ||
+        error.message.includes("fetch")
+      ) {
+        errorMessage =
+          "Masalah koneksi jaringan. Periksa koneksi internet Anda.";
+        statusCode = 503;
+      }
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
 }

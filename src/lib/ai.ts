@@ -1,12 +1,21 @@
 import OpenAI from "openai";
 
+// Simple in-memory cache for AI responses
+const responseCache = new Map<
+  string,
+  { response: string; timestamp: number }
+>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 // AI Provider types
-export type AIProvider = "gemini" | "openai";
+export type AIProvider = "openai" | "groq";
 
 // Get AI provider from environment
 export const getAIProvider = (): AIProvider => {
   const provider = process.env.AI_PROVIDER?.toLowerCase();
-  return provider === "openai" ? "openai" : "gemini";
+  if (provider === "openai") return "openai";
+  if (provider === "groq") return "groq";
+  return "groq"; // default
 };
 
 // OpenAI client
@@ -24,44 +33,6 @@ const getOpenAIClient = (): OpenAI => {
   }
   return openaiClient;
 };
-
-// Gemini API call function
-export async function callGeminiAPI(prompt: string): Promise<string> {
-  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GOOGLE_GEMINI_API_KEY is required");
-  }
-
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
-
-  const response = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      `Gemini API error: ${errorData.error?.message || "Unknown error"}`
-    );
-  }
-
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-}
 
 // OpenAI API call function
 export async function callOpenAIAPI(
@@ -93,7 +64,50 @@ export async function callOpenAIAPI(
   }
 }
 
-// Unified AI call function
+// Groq API call function
+export async function callGroqAPI(
+  prompt: string,
+  model: string = "llama-3.1-8b-instant"
+): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error("GROQ_API_KEY is required");
+  }
+
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      `Groq API error: ${errorData.error?.message || "Unknown error"}`
+    );
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+// Unified AI call function with fallback
 export async function callAI(
   prompt: string,
   options?: {
@@ -101,15 +115,91 @@ export async function callAI(
     model?: string;
   }
 ): Promise<string> {
-  const provider = options?.provider || getAIProvider();
+  // Check cache first
+  const cacheKey = `${options?.provider || getAIProvider()}:${prompt}`;
+  const cached = responseCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log("Using cached response");
+    return cached.response;
+  }
 
-  console.log(`Using AI provider: ${provider}`);
+  const primaryProvider = options?.provider || getAIProvider();
 
-  if (provider === "openai") {
-    const model = options?.model || "gpt-3.5-turbo";
-    return await callOpenAIAPI(prompt, model);
-  } else {
-    return await callGeminiAPI(prompt);
+  console.log(`Using AI provider: ${primaryProvider}`);
+
+  // Try primary provider first
+  try {
+    let result: string;
+    if (primaryProvider === "openai") {
+      const model = options?.model || "gpt-3.5-turbo";
+      result = await callOpenAIAPI(prompt, model);
+    } else {
+      // Default to groq
+      const model = options?.model || "llama-3.1-8b-instant";
+      result = await callGroqAPI(prompt, model);
+    }
+
+    // Cache the result
+    responseCache.set(cacheKey, { response: result, timestamp: Date.now() });
+    return result;
+  } catch (primaryError) {
+    console.warn(`Primary provider ${primaryProvider} failed:`, primaryError);
+
+    // Try fallback provider if available
+    const getFallbackProvider = (primary: AIProvider): AIProvider => {
+      if (primary === "groq") return "openai";
+      return "groq"; // if primary is openai, fallback to groq
+    };
+
+    const fallbackProvider = getFallbackProvider(primaryProvider);
+
+    // Check if fallback provider has API key
+    const hasFallbackKey =
+      (fallbackProvider === "openai" && !!process.env.OPENAI_API_KEY) ||
+      (fallbackProvider === "groq" && !!process.env.GROQ_API_KEY);
+
+    if (hasFallbackKey) {
+      console.log(`Trying fallback provider: ${fallbackProvider}`);
+      try {
+        let result: string;
+        if (fallbackProvider === "openai") {
+          const model = options?.model || "gpt-3.5-turbo";
+          result = await callOpenAIAPI(prompt, model);
+        } else {
+          // Default to groq
+          const model = options?.model || "llama-3.1-8b-instant";
+          result = await callGroqAPI(prompt, model);
+        }
+
+        // Cache the result
+        responseCache.set(cacheKey, {
+          response: result,
+          timestamp: Date.now(),
+        });
+        return result;
+      } catch (fallbackError) {
+        console.error(
+          `Fallback provider ${fallbackProvider} also failed:`,
+          fallbackError
+        );
+        throw new Error(
+          `Both AI providers failed. Primary: ${
+            primaryError instanceof Error
+              ? primaryError.message
+              : "Unknown error"
+          }. Fallback: ${
+            fallbackError instanceof Error
+              ? fallbackError.message
+              : "Unknown error"
+          }`
+        );
+      }
+    } else {
+      console.warn(
+        `No fallback provider available (missing ${fallbackProvider.toUpperCase()}_API_KEY)`
+      );
+      throw primaryError; // Re-throw original error
+    }
   }
 }
 
